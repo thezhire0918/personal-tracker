@@ -2,14 +2,14 @@
 
 from fastapi import FastAPI, Depends
 from app.database import Base, engine
-from app.routes import users
+from app.routes import users, transactions
 from app.auth import get_current_user
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-app.include_router(users.router)
+app.include_router(transactions.router)
 
 
 @app.get("/")
