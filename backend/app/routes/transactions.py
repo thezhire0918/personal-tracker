@@ -62,3 +62,40 @@ def create_transaction(
         "type": new_transaction.type,
         "amount": new_transaction.amount,
     }
+    
+    
+@router.get("/transactions")
+def get_transactions(
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transactions = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == user_id)
+        .order_by(Transaction.created_at.desc())
+        .all()
+    )
+
+    return transactions
+
+
+@router.get("/balance")
+def get_balance(
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transactions = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == user_id)
+        .all()
+    )
+
+    total_income = sum(t.amount for t in transactions if t.type == "income")
+    total_expense = sum(t.amount for t in transactions if t.type == "expense")
+    balance = total_income - total_expense
+
+    return {
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": balance,
+    }

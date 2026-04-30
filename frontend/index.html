@@ -1,0 +1,192 @@
+<!-- frontend/index.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Personal Tracker</title>
+</head>
+<body>
+  <h1>Personal Tracker</h1>
+
+  <h2>Login</h2>
+  <input id="email" placeholder="Email">
+  <input id="password" placeholder="Password" type="password">
+  <button onclick="login()">Login</button>
+  <button onclick="logout()">Logout</button>
+  <p id="loginStatus">Not logged in</p>
+
+  <h2>Add Transaction</h2>
+  <select id="type">
+    <option value="income">Income</option>
+    <option value="expense">Expense</option>
+  </select>
+  <input id="amount" placeholder="Amount" type="number">
+  <input id="category" placeholder="Category">
+  <input id="description" placeholder="Description">
+  <button onclick="addTransaction()">Add</button>
+
+  <h2>Balance</h2>
+  <button onclick="getBalance()">Refresh Balance</button>
+  <pre id="balance">No balance loaded yet.</pre>
+
+  <h2>Transactions</h2>
+  <button onclick="getTransactions()">Refresh Transactions</button>
+  <pre id="transactions">No transactions loaded yet.</pre>
+
+  <script>
+    let token = localStorage.getItem("token") || "";
+
+    function formatPeso(amount) {
+      return "₱" + Number(amount).toLocaleString();
+    }
+
+    function updateLoginStatus() {
+      const status = document.getElementById("loginStatus");
+
+      if (token) {
+        status.textContent = "Logged in";
+      } else {
+        status.textContent = "Not logged in";
+      }
+    }
+
+    async function login() {
+      const response = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert("Login failed: " + JSON.stringify(data));
+        return;
+      }
+
+      token = data.access_token;
+      localStorage.setItem("token", token);
+
+      updateLoginStatus();
+      getBalance();
+      getTransactions();
+    }
+
+    function logout() {
+      token = "";
+      localStorage.removeItem("token");
+
+      document.getElementById("totalIncome").textContent = "₱0";
+      document.getElementById("totalExpense").textContent = "₱0";
+      document.getElementById("balance").textContent = "₱0";
+      document.getElementById("transactionsTable").innerHTML = "";
+
+      updateLoginStatus();
+      alert("Logged out");
+    }
+
+    async function addTransaction() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:8000/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          type: document.getElementById("type").value,
+          amount: Number(document.getElementById("amount").value),
+          category: document.getElementById("category").value,
+          description: document.getElementById("description").value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert("Add failed: " + JSON.stringify(data));
+        return;
+      }
+
+      document.getElementById("amount").value = "";
+      document.getElementById("category").value = "";
+      document.getElementById("description").value = "";
+
+      getBalance();
+      getTransactions();
+    }
+
+    async function getBalance() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:8000/balance", {
+        headers: {"Authorization": "Bearer " + token}
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert("Balance failed: " + JSON.stringify(data));
+        return;
+      }
+
+      document.getElementById("totalIncome").textContent = formatPeso(data.total_income);
+      document.getElementById("totalExpense").textContent = formatPeso(data.total_expense);
+      document.getElementById("balance").textContent = formatPeso(data.balance);
+    }
+
+    async function getTransactions() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:8000/transactions", {
+        headers: {"Authorization": "Bearer " + token}
+      });
+
+      const transactions = await response.json();
+
+      if (!response.ok) {
+        alert("Transactions failed: " + JSON.stringify(transactions));
+        return;
+      }
+
+      const table = document.getElementById("transactionsTable");
+      table.innerHTML = "";
+
+      transactions.forEach(item => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${item.id}</td>
+          <td>${item.type}</td>
+          <td>${formatPeso(item.amount)}</td>
+          <td>${item.category || ""}</td>
+          <td>${item.description || ""}</td>
+          <td>${new Date(item.created_at).toLocaleString()}</td>
+        `;
+
+        table.appendChild(row);
+      });
+    }
+
+    updateLoginStatus();
+
+    if (token) {
+      getBalance();
+      getTransactions();
+    }
+  </script>
+</body>
+</html>
