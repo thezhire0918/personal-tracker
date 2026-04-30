@@ -1,9 +1,9 @@
-<!-- frontend/index.html -->
+<!-- frontend/signup.html -->
 
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login - Personal Tracker</title>
+  <title>Sign Up - Personal Tracker</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#2563eb">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,33 +45,41 @@
       font-weight: bold;
       cursor: pointer;
     }
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
     <div class="card">
-      <h1>Personal Tracker</h1>
-      <h2>Login</h2>
+      <h1>Create Account</h1>
 
+      <input id="name" placeholder="Name">
       <input id="email" placeholder="Email">
       <input id="password" placeholder="Password" type="password">
-      <button onclick="login()">Login</button>
+
+      <button onclick="signup()">Sign Up</button>
 
       <p id="message"></p>
+
       <p>
-        New user?
-        <a href="./signup.html">Create an account</a>
+        Already have an account?
+        <a href="./index.html">Login</a>
       </p>
     </div>
   </div>
 
   <script>
-    async function login() {
-      const response = await fetch("http://127.0.0.1:8000/login", {
+    async function signup() {
+      const response = await fetch("http://127.0.0.1:8000/register", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
+          name: document.getElementById("name").value,
           email: document.getElementById("email").value,
           password: document.getElementById("password").value
         })
@@ -81,16 +89,16 @@
 
       if (!response.ok) {
         document.getElementById("message").textContent =
-          "Login failed: " + JSON.stringify(data);
+          "Signup failed: " + JSON.stringify(data);
         return;
       }
 
-      localStorage.setItem("token", data.access_token);
-      window.location.href = "./dashboard.html";
-    }
+      document.getElementById("message").textContent =
+        "Account created successfully. Redirecting to login...";
 
-    if (localStorage.getItem("token")) {
-      window.location.href = "./dashboard.html";
+      setTimeout(() => {
+        window.location.href = "./index.html";
+      }, 1000);
     }
   </script>
 </body>
