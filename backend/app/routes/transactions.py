@@ -16,6 +16,7 @@ class TransactionCreate(BaseModel):
     amount: float
     category: str | None = None
     description: str | None = None
+    proof_image: str | None = None
 
 
 def get_db():
@@ -50,6 +51,7 @@ def create_transaction(
         amount=transaction.amount,
         category=transaction.category,
         description=transaction.description,
+        proof_image=transaction.proof_image,
     )
 
     db.add(new_transaction)

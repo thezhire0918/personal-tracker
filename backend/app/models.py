@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
 
 from app.database import Base
 
@@ -26,4 +26,5 @@ class Transaction(Base):
     amount = Column(Float, nullable=False)
     category = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    proof_image = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

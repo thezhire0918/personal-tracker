@@ -1,6 +1,6 @@
 // frontend/service-worker.js
 
-const CACHE_NAME = "personal-tracker-v1";
+const CACHE_NAME = "personal-tracker-v2";
 
 const FILES_TO_CACHE = [
   "./",
